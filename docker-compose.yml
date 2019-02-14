@@ -19,7 +19,7 @@ services:
       - "80:80"
     volumes:
       - web-root:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
+      - ./docker-config/nginx-conf:/etc/nginx/conf.d
     depends_on:
       - nodejs
     networks:

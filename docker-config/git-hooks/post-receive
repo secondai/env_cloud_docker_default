@@ -1,0 +1,4 @@
+#!/bin/sh
+git --work-tree=/root/second --git-dir=/root/second1.git checkout -f
+# todo: determine if restart is required for all components, or just server, etc. (what changed in docker-compose, or in nodejs/second?)
+cd /root/second && docker-compose build && docker-compose down && docker-compose up -d
