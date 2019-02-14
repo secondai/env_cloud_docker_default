@@ -25,26 +25,38 @@ services:
     networks:
       - app-network
 
+  mydb:
+    image: postgres
+    container_name: mydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    expose: # internal links
+      - 5432
+    # ports:
+    #   - 5432:5432
+
   ipfs:
     image: ipfs/go-ipfs
-    # container_name: "ipfs"
+    container_name: ipfs
     restart: unless-stopped
     expose: # internal links
-    - 4001
-    - 5001
-    - 8080
+      - 4001
+      - 5001
+      - 8080
     # externally available ports
     # - 5010: api endpoint 
     ports: 
-    - 4001:4001
-    # - 5010:5001
-    - 8081:8080 
+      - 4001:4001
+      # - 5010:5001
+      - 8081:8080 
     volumes:
       - ipfs-data:/data
     networks:
       - app-network
 
 volumes:
+  db-data:
+    driver: local
   web-root:
     driver: local
   ipfs-data:
