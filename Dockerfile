@@ -6,17 +6,21 @@ WORKDIR /home/node/app
 
 COPY package*.json ./
 
-USER node
 
 RUN apk add --no-cache --virtual .gyp \
         python \
         make \
-        g++ \
-    && npm install \
-    && apk del .gyp
+        g++ 
 
+USER node
+
+RUN npm install
 
 COPY --chown=node:node . .
+
+
+RUN apk del .gyp
+
 
 EXPOSE 8080
 
