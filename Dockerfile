@@ -18,6 +18,7 @@ RUN npm install
 
 COPY --chown=node:node . .
 
+USER root
 
 RUN apk del .gyp
 
