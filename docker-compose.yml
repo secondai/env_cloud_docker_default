@@ -29,9 +29,9 @@ services:
     image: postgres
     container_name: mydb
     environment:
-      - POSTGRES_PASSWORD: "postgres"
-      - POSTGRES_USER: "postgres"
-      - POSTGRES_DB: "second-example"
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: second-example
     volumes:
       - db-data:/var/lib/postgresql/data
     expose: # internal links
