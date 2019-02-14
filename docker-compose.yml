@@ -29,18 +29,20 @@ services:
     image: ipfs/go-ipfs
     # container_name: "ipfs"
     restart: unless-stopped
-    # expose: # internal links
-    # - 4001
-    # - 5001
-    # - 8080
+    expose: # internal links
+    - 4001
+    - 5001
+    - 8080
     # externally available ports
     # - 5010: api endpoint 
     ports: 
     - 4001:4001
     # - 5010:5001
-    # - 8080:8080 
+    - 8081:8080 
     volumes:
       - ipfs-data:/data
+    networks:
+      - app-network
 
 volumes:
   web-root:
@@ -50,4 +52,6 @@ volumes:
 
 networks:
   app-network:
+    driver: bridge 
+  default:
     driver: bridge 
