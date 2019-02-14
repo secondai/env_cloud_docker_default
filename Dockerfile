@@ -8,7 +8,13 @@ COPY package*.json ./
 
 USER node
 
-RUN npm install
+RUN apk add --no-cache --virtual .gyp \
+        python \
+        make \
+        g++ \
+    && npm install \
+    && apk del .gyp
+
 
 COPY --chown=node:node . .
 
