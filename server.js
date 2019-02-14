@@ -16,7 +16,7 @@ pool.query("SELECT NOW()", (err, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello, Test8!');
+  res.send('Hello, Test9!');
 });
 
 app.listen(8080, () => console.log('Listening on port 8080'));
