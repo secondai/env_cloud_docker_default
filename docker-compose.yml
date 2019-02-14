@@ -28,16 +28,19 @@ services:
   mydb:
     image: postgres
     container_name: mydb
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: second-example
+      POSTGRES_DB: seconddb
+    networks:
+      - app-network
     volumes:
       - db-data:/var/lib/postgresql/data
-    # expose: # internal links
-    #   - 5432
-    ports:
-      - 5432:5432
+    expose: # internal links
+      - 5432
+    # ports:
+    #   - 5432:5432
 
   ipfs:
     image: ipfs/go-ipfs

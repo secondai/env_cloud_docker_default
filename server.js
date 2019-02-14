@@ -4,10 +4,10 @@ const app = express();
 const pg = require('pg');
 const pool = new pg.Pool({
 	user: 'postgres',
-	password: 'postgres',
 	host: 'mydb',
-	database: 'second-example',
-	port: '5432'
+	database: 'seconddb',
+	password: 'postgres',
+	port: 5432
 });
 
 pool.query("SELECT NOW()", (err, res) => {
@@ -16,7 +16,7 @@ pool.query("SELECT NOW()", (err, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello, Test4!');
+  res.send('Hello, Test5!');
 });
 
 app.listen(8080, () => console.log('Listening on port 8080'));
