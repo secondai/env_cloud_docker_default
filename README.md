@@ -9,9 +9,10 @@
 curl -o- https://raw.githubusercontent.com/secondai/env_cloud_docker_default/master/install.sh | bash
 ```
 
-## Publish Update to Git Server on Droplet 
+## Publish you changes to Git server on Droplet 
 
 Replace `{ip}` with the IP or hostname of your Second's server: 
 ```
 git remote add live ssh://root@{ip}/root/second.git
+git push live master
 ```
