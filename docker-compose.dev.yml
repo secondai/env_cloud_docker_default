@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: dev.dockerfile
+      # dockerfile: dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    networks:
+      - app-network
+    volumes:
+      - .:/usr/src/app
+      # - /usr/src/app/node_modules
+
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - web-root:/var/www/html
+      - ./docker-config/nginx-conf:/etc/nginx/conf.d
+    depends_on:
+      - nodejs
+    networks:
+      - app-network
+
+  mydb:
+    image: postgres
+    container_name: mydb
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: seconddb
+    networks:
+      - app-network
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    expose: # internal links
+      - 5432
+    # ports:
+    #   - 5432:5432
+
+  ipfs:
+    image: ipfs/go-ipfs
+    container_name: ipfs
+    restart: unless-stopped
+    expose: # internal links
+      - 4001
+      - 5001
+      - 8080
+    # externally available ports
+    # - 5010: api endpoint 
+    ports: 
+      - 4001:4001
+      # - 5010:5001
+      # - 8081:8080 
+    volumes:
+      - ipfs-data:/data
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+    driver: local
+  web-root:
+    driver: local
+  ipfs-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge 
+  default:
+    driver: bridge 

@@ -1,28 +1,20 @@
-FROM node:10-alpine
+# The instructions for the first stage
+FROM node:10-alpine as builder
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+ARG NODE_ENV=development
+ENV NODE_ENV=${NODE_ENV}
 
-WORKDIR /home/node/app
+RUN apk --no-cache add python make g++
 
 COPY package*.json ./
-
-
-RUN apk add --no-cache --virtual .gyp \
-        python \
-        make \
-        g++ 
-
-USER node
-
 RUN npm install
 
-COPY --chown=node:node . .
+# The instructions for second stage
+FROM node:10-alpine
 
-USER root
+WORKDIR /usr/src/app
+COPY --from=builder node_modules node_modules
 
-RUN apk del .gyp
+COPY . .
 
-
-EXPOSE 8080
-
-CMD [ "node", "server.js" ]
+CMD [ "npm", "start" ]

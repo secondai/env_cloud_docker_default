@@ -4,15 +4,15 @@ services:
   nodejs:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     image: nodejs
     container_name: nodejs
     restart: unless-stopped
     networks:
       - app-network
     volumes:
-      - .:/home/node/app/
-      - /home/node/app/node_modules
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
 
   webserver:
     image: nginx:mainline-alpine
