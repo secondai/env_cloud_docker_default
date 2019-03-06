@@ -6,7 +6,7 @@
 1. SSH via root@{ip} 
 1. Run install script: 
 ```
-curl -o- https://raw.githubusercontent.com/secondai/env_cloud_docker_default/master/install.sh | bash
+bash <(curl -s https://raw.githubusercontent.com/secondai/env_cloud_docker_default/master/install.sh)
 ```
 
 ## Publish you changes to Git server on Droplet 

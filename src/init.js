@@ -36,30 +36,31 @@ if(process.env.SHOW_ENV == '1'){
 // app.listen(8080, () => console.log('Listening on port 8080'));
 
 
-// Check for required environment variables 
-// - TODO: load fom config file shipped with environment 
-let expectedEnvVars = [
-  // ['DEFAULT_LAUNCH_PATH'],
-  // ['STELLAR_NETWORK'],
-  // ['PORT'],
-];
-let foundEnvVars = Object.keys(process.env).map(k=>{return {k, v: process.env[k]}});
-if(expectedEnvVars.filter(varBox=>{
-    let varName = varBox[0];
-    if(varBox.length == 1){
-      // name same as string 
-      if(!lodash.find(foundEnvVars, {k:varName})){
-        console.error('Missing ENV:', varName);
-        return true;
-      }
-    } else {
-      // TODO: run conditional check (should support "x or (y and z)" type of logic 
-      // let varQuery = varBox[1];
-    }
-    return false;
-  }).length){
-  throw '--Not Launching, missing environment variable--'
-}
+// // Check for required environment variables 
+// // - TODO: load fom config file shipped with environment 
+// let expectedEnvVars = [
+//   // ['DEFAULT_LAUNCH_PATH'],
+//   // ['STELLAR_NETWORK'],
+//   // ['PORT'],
+// ];
+// let foundEnvVars = Object.keys(process.env).map(k=>{return {k, v: process.env[k]}});
+// if(expectedEnvVars.filter(varBox=>{
+//     let varName = varBox[0];
+//     if(varBox.length == 1){
+//       // name same as string 
+//       if(!lodash.find(foundEnvVars, {k:varName})){
+//         console.error('Missing ENV:', varName);
+//         return true;
+//       }
+//     } else {
+//       // TODO: run conditional check (should support "x or (y and z)" type of logic 
+//       // let varQuery = varBox[1];
+//     }
+//     return false;
+//   }).length){
+//   console.log('Var:', varBox);
+//   throw '--Not Launching, missing environment variable--'
+// }
 
 let App = {};
 global.App = App;
