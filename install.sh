@@ -39,7 +39,7 @@ sleep 2
 cd ~
 git clone https://github.com/secondai/env_cloud_docker_default.git second
 # write .env file for startup
-cd env_cloud_docker_default
+cd second
 cat <<EOF >.env
 LAUNCH_NODES_ZIP_URL=$ZIP
 LAUNCH_STARTUP_PATH=$LAUNCH_STARTUP_PATH
@@ -57,7 +57,7 @@ chmod +x second.git/hooks/post-receive
 
 # start containers 
 cd ~/second
-docker-compose up -d 
+docker-compose -f docker-compose.prod.yml up -d 
 
 
 } # this ensures the entire script is downloaded #

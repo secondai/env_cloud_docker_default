@@ -2,7 +2,7 @@
 
 ## Install  
 
-1. Create Droplet 
+1. Create Droplet w/ Docker (and docker-compose also should be included) 
 1. SSH via root@{ip} 
 1. Run install script: 
 ```
