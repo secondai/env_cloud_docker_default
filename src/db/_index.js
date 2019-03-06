@@ -22,7 +22,8 @@ if (!global.hasOwnProperty('db')) {
     protocol: 'postgres',
     dialectOptions: {
       // ssl: true
-    }
+    },
+    operatorsAliases: true
   })
 
   let db = {

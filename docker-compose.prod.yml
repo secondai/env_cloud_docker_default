@@ -45,6 +45,16 @@ services:
     # ports:
     #   - 5432:5432
 
+  cachedb:
+    image: redis
+    container_name: cachedb
+    expose:
+      - 6379
+    networks:
+      - app-network
+    volumes:
+     - redisdata:/data
+
   ipfs:
     image: ipfs/go-ipfs
     container_name: ipfs
@@ -70,6 +80,8 @@ volumes:
   web-root:
     driver: local
   ipfs-data:
+    driver: local
+  redisdata:
     driver: local
 
 networks:

@@ -2,11 +2,11 @@ version: '3'
 
 services:
   nodejs:
+    container_name: nodejs
     build:
       context: .
       dockerfile: dockerfile.dev
     image: nodejs
-    container_name: nodejs
     restart: unless-stopped
     networks:
       - app-network
@@ -15,11 +15,11 @@ services:
       # - /usr/src/app/node_modules
 
   webserver:
-    image: nginx:mainline-alpine
     container_name: webserver
+    image: nginx:mainline-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "7132:80"
     volumes:
       - web-root:/var/www/html
       - ./docker-config/nginx-conf:/etc/nginx/conf.d
@@ -29,8 +29,8 @@ services:
       - app-network
 
   mydb:
-    image: postgres
     container_name: mydb
+    image: postgres
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
@@ -45,9 +45,33 @@ services:
     # ports:
     #   - 5432:5432
 
+  cachedb:
+    image: redis
+    container_name: cachedb
+    expose:
+      - 6379
+    networks:
+      - app-network
+    volumes:
+     - redisdata:/data
+
+  pgadmin:
+    container_name: pgadmin_container
+    restart: unless-stopped
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    volumes:
+       - pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - app-network
+
   ipfs:
-    image: ipfs/go-ipfs
     container_name: ipfs
+    image: ipfs/go-ipfs
     restart: unless-stopped
     expose: # internal links
       - 4001
@@ -71,6 +95,9 @@ volumes:
     driver: local
   ipfs-data:
     driver: local
+  redisdata:
+    driver: local
+  pgadmin:
 
 networks:
   app-network:
