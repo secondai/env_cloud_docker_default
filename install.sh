@@ -7,6 +7,12 @@
 
 # expect to be root!!
 
+# Welcome 
+echo "-------------------------------"
+echo "-    Second Cloud Launcher    -"
+echo "-------------------------------"
+sleep 1
+
 # get variables (.env) 
 # - startup nodes 
 
@@ -33,6 +39,8 @@ PASSPHRASE=${PASSPHRASE:-$DEFAULT_PASSPHRASE}
 echo "----"
 echo "Dont forget your passphrase!!! It is: $PASSPHRASE"
 echo "----"
+echo ""
+echo "Creating Second...getting code, containers, launching, etc."
 sleep 2
 
 # git second repo 
@@ -58,6 +66,15 @@ chmod +x second.git/hooks/post-receive
 # start containers 
 cd ~/second
 docker-compose -f docker-compose.prod.yml up -d 
+
+echo "-------------------------------"
+echo "-            Done!            -"
+echo "-                             -"
+echo "-                             -"
+echo "- Visit your Second at the IP -"
+echo "- address for your droplet    -"
+echo "-------------------------------"
+echo ""
 
 
 } # this ensures the entire script is downloaded #

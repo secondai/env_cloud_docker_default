@@ -40,8 +40,8 @@ if(process.env.SHOW_ENV == '1'){
 // - TODO: load fom config file shipped with environment 
 let expectedEnvVars = [
   // ['DEFAULT_LAUNCH_PATH'],
-  ['STELLAR_NETWORK'],
-  ['PORT'],
+  // ['STELLAR_NETWORK'],
+  // ['PORT'],
 ];
 let foundEnvVars = Object.keys(process.env).map(k=>{return {k, v: process.env[k]}});
 if(expectedEnvVars.filter(varBox=>{
