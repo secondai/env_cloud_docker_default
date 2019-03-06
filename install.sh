@@ -40,8 +40,8 @@ echo "----"
 echo "Dont forget your passphrase!!! It is: $PASSPHRASE"
 echo "----"
 echo ""
-echo "Creating Second...getting code, containers, launching, etc."
-sleep 2
+echo "Creating Second...getting code, containers, launching, etc. (Takes ~3 minutes to get ready)"
+sleep 4
 
 # git second repo 
 cd ~
