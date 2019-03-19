@@ -5,7 +5,7 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
 RUN apk update
-RUN apk --no-cache add bash git rsync unison
+RUN apk --no-cache add bash python git rsync unison make g++
 
 ENV GLIBC 2.28-r0
 
@@ -23,8 +23,6 @@ COPY --from=library/docker:latest /usr/local/bin/docker /usr/bin/docker
 COPY --from=docker/compose:1.23.2 /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 WORKDIR /usr/src/app
-
-# RUN apk --no-cache add python make g++
 
 COPY . .
 
