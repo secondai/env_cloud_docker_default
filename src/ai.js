@@ -74,7 +74,7 @@ class Second {
   		// - launch "after-fill" node 
   		console.error('Missing nodes, filling...');
   		await defaultPopulate();
-
+  		
   		startupResponse = await this.startupRequest({
   			type: 'types.second.default.startup_input',
   			data: {
@@ -99,7 +99,7 @@ class Second {
   			}
   		});
 	  }
-
+	  
     console.log('StartupResponse:', startupResponse);
 
 	}

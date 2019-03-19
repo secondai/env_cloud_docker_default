@@ -128,8 +128,8 @@ DB_TABLE_NODES=$DB_TABLE_NODES
 PORT=8080
 EOF
 
-# run Codesandbox login (Expect file) 
-CODESANDBOX_TOKEN=$CODESANDBOX_TOKEN expect-codesandbox-login.exp 
+# # run Codesandbox login (Expect file) 
+# CODESANDBOX_TOKEN=$CODESANDBOX_TOKEN expect-codesandbox-login.exp 
 
 # setup hooks for updating via git push 
 cd ~
@@ -140,6 +140,7 @@ chmod +x second.git/hooks/post-receive
 # start containers 
 # - TODO: are environment variables passed in? 
 cd ~/second
+mkdir /usr/src/attached-volume
 docker-compose -f docker-compose.prod.yml up -d 
 
 echo "-------------------------------"

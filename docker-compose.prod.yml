@@ -25,6 +25,8 @@ services:
       args: 
         AUTHORIZED_KEYS: ${AUTHORIZED_KEYS}
     container_name: sshd
+    depends_on:
+      - nodejs
     networks:
       - app-network
     ports:

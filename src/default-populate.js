@@ -90,13 +90,15 @@ async function populate(){
           await fs.writeFile(path.join(VOLUME, nameNoPrefix), fileData);
         }
       } else {
-        // node
-        let nodeName = nameNoPrefix.substring(0, nameNoPrefix.length - 5); // remove ".json" suffix 
-        // // TODO: duplicates? 
-        let contents = await readFilePath(filepath);
-        contents = JSON.parse(contents);
-        await App.secondAI.MySecond.putNodeAtPath(nodeName, contents) 
-        console.log('writeNode:', nodeName);
+        if(!file.dir){
+          // node
+          let nodeName = nameNoPrefix.substring(0, nameNoPrefix.length - 5); // remove ".json" suffix 
+          // // TODO: duplicates? 
+          let contents = await readFilePath(filepath);
+          contents = JSON.parse(contents);
+          await App.secondAI.MySecond.putNodeAtPath(nodeName, contents) 
+          console.log('writeNode:', nodeName);
+        }
       }
     }
   }

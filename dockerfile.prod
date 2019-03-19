@@ -9,7 +9,6 @@ RUN apk --no-cache add bash git rsync unison python make g++
 
 COPY package*.json ./
 RUN npm install
-RUN npm install -g codesandbox
 
 # The instructions for second stage
 FROM node:10-alpine
