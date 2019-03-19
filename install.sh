@@ -76,22 +76,22 @@ read DB_TABLE_NODES
 DB_TABLE_NODES=${DB_TABLE_NODES:-$DEFAULT_DB_TABLE_NODES}
 [[ -z "$DB_TABLE_NODES" ]] && { echo "Valid input required" ; exit 1; }
 
-# TODO: check for valid `codesandbox` binary on PATH 
-echo "----"
-echo -e "Visit ${C_LCYAN}https://codesandbox.io/cli/login${C_NC} in your browser (login required) and get a Token to use for the next step"
-echo "----"
-# echo -e -n "${C_RED}Codesandbox${C_NC} Token: " 
-# read CODESANDBOX_TOKEN
-# [[ -z "$CODESANDBOX_TOKEN" ]] && { echo "Valid input required" ; exit 1; }
-echo -e -n "OK, I'm ready...(press ${C_LGREEN}enter${C_NC})"
-read
-# run Codesandbox login (Expect file) 
-codesandbox login
-# CODESANDBOX_TOKEN=$CODESANDBOX_TOKEN expect-codesandbox-login.exp 
+# # TODO: check for valid `codesandbox` binary on PATH 
+# echo "----"
+# echo -e "Visit ${C_LCYAN}https://codesandbox.io/cli/login${C_NC} in your browser (login required) and get a Token to use for the next step"
+# echo "----"
+# # echo -e -n "${C_RED}Codesandbox${C_NC} Token: " 
+# # read CODESANDBOX_TOKEN
+# # [[ -z "$CODESANDBOX_TOKEN" ]] && { echo "Valid input required" ; exit 1; }
+# echo -e -n "OK, I'm ready...(press ${C_LGREEN}enter${C_NC})"
+# read
+# # run Codesandbox login (Expect file) 
+# codesandbox login
+# # CODESANDBOX_TOKEN=$CODESANDBOX_TOKEN expect-codesandbox-login.exp 
 
-# todo: check for login success 
-echo "Logged into Codesandbox.io"
-echo "----"
+# # todo: check for login success 
+# echo "Logged into Codesandbox.io"
+# echo "----"
 
 # AUTHORIZED_KEYS 
 echo -e -n "Enter your local ~/.ssh/id_rsa.pub public key for ssh access (${C_CYAN}$DEFAULT_AUTHORIZED_KEYS${C_NC}): "
@@ -112,7 +112,7 @@ echo ""
 echo "Creating Second...getting code, containers, launching, etc. (Takes ~3 minutes to get ready)"
 sleep 4
 
-exit 1;
+# exit 1;
 
 # git second repo 
 cd ~
