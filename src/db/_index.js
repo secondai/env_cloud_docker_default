@@ -17,7 +17,7 @@ if (!global.hasOwnProperty('db')) {
   sequelize = new Sequelize(connectionUrl, {
     timestamps: false,
     underscored: true,
-    logging:  true, //process.env.MYSQL_LOG === 'false' ? false:true,
+    logging:  ['true','1'].indexOf((process.env.SECOND_CONSOLE_LOG || '').toString()) > -1 ? true:false,
     dialect: 'postgres',
     protocol: 'postgres',
     dialectOptions: {

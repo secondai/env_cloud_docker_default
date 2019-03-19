@@ -1,9 +1,21 @@
 
 const request = require('request-promise-native');
 const JSZip = require("jszip");
+const fs = require('fs-extra');
+const path = require('path');
+
+// let expectedBuildTypes = [
+//   'types.second.default.app',
+//   'types.second.default.code.js',
+//   'types.second.default.service.js',
+//   'types.second.default.permissions',
+//   'types.second.default.route'
+// ];
+
 
 async function populate(){
 
+  let VOLUME = process.env.ATTACHED_VOLUME_ROOT + 'root/';
 
   let url = process.env.LAUNCH_NODES_ZIP_URL;
   if(!url){
@@ -37,38 +49,84 @@ async function populate(){
       resolve(r);
     });
   }
+  function readFilePathToBuffer(p){
+    return new Promise(async (resolve,reject)=>{
+      // console.log('path:', p);
+      let r = await files[p].async('nodebuffer')
+      resolve(r);
+    });
+  }
 
-  // load all the files 
+  // load all the nodes/files 
   let allFiles = {};
   let nodes = {};
   for(let filepath of Object.keys(files)){
     let file = files[filepath];
-    if(file.dir){
-      // skip directory names (nothing to save)
-    } else {
-      // check if under '/nodes' 
-      let contents = await readFilePath(filepath);
-      // console.log('filepath:', filepath);
-      // console.log('contents:', contents);
-      let normalizedPath = filepath.split('/').splice(1).join('/');
-      allFiles[normalizedPath] = contents;
-      let nodesSlashIdx = filepath.indexOf('nodes/');
-      if(nodesSlashIdx > -1){
-        let nodeName = filepath.slice(nodesSlashIdx + 'nodes/'.length, filepath.length - 5); // remove "/nodes/" and ".json" 
-        // TODO: duplicates? 
-        nodes[nodeName] = JSON.parse(contents);
+    // check if under '/nodes' 
+    // console.log('filepath:', filepath);
+    // console.log('contents:', contents);
+    let normalizedPath = filepath.split('/').splice(1).join('/');
+    let nodesSlashIdx = filepath.indexOf('nodes/');
+    if(nodesSlashIdx > -1){
+      let nameNoPrefix = filepath.slice(nodesSlashIdx + 'nodes/'.length);
+      if(nameNoPrefix.split('/').length > 1){
+        // file is deeper!
+        if(file.dir){
+          // skip directory names (nothing to save)
+          console.log('writeDir:', nameNoPrefix);
+
+          // ensure directory exists  
+          await fs.ensureDir(path.join(VOLUME, nameNoPrefix));
+
+        } else {
+          let fdir = path.dirname( nameNoPrefix );
+
+          // file 
+          console.log('isFile:', nameNoPrefix, 'Dir:', fdir);
+
+          // ensure directory, write file using Buffer 
+          await fs.ensureDir(path.join(VOLUME, fdir));
+          let fileData = await readFilePathToBuffer(filepath);
+          await fs.writeFile(path.join(VOLUME, nameNoPrefix), fileData);
+        }
+      } else {
+        // node
+        let nodeName = nameNoPrefix.substring(0, nameNoPrefix.length - 5); // remove ".json" suffix 
+        // // TODO: duplicates? 
+        let contents = await readFilePath(filepath);
+        contents = JSON.parse(contents);
+        await App.secondAI.MySecond.putNodeAtPath(nodeName, contents) 
+        console.log('writeNode:', nodeName);
       }
     }
   }
 
-  console.log('allFiles from Zip:'); //, allFiles);
-  console.log('nodes from zip:', JSON.stringify(Object.keys(nodes),null,2));
+  // console.log('Build services that are specified ');
+  // console.log('Paths to build:', toBuild);
+
+  // // expecting "services.second.default.bin.build" to exist, and NOT be code 
+
+  // for(let nodeInfo of toBuild){
+  //   // run code in vm for each: "services.second.default.bin.build" 
+  //   // - build ALL, using defaults for each 
+  //   let nodePath = nodeInfo[0];
+  //   let node = nodeInfo[1];
+  //   node.name = nodePath; // already done 
+
+
+  // }
+
+  // console.log('DONE3');
+  // return false;
+
+  // console.log('allFiles from Zip:'); //, allFiles);
+  // console.log('nodes from zip:', JSON.stringify(Object.keys(nodes),null,2));
   
-  for(let name of Object.keys(nodes)){
-    let nodeTypeData = nodes[name];
-    console.log('saving node:', name, nodeTypeData.type);
-    await App.secondAI.MySecond.putNodeAtPath(name, nodeTypeData) 
-  }
+  // for(let name of Object.keys(nodes)){
+  //   let nodeTypeData = nodes[name];
+  //   console.log('saving node:', name, nodeTypeData.type);
+  //   await App.secondAI.MySecond.putNodeAtPath(name, nodeTypeData) 
+  // }
   
   console.log('Done Adding via Zip');
 

@@ -1,0 +1,15 @@
+FROM sickp/alpine-sshd:latest
+
+ARG AUTHORIZED_KEYS
+
+RUN apk update \
+    && apk add bash rsync git openssh unison \
+    && mkdir /root/.ssh \
+    && chmod 0700 /root/.ssh \
+    && ssh-keygen -A \
+    && sed -i s/^#PasswordAuthentication\ yes/PasswordAuthentication\ no/ /etc/ssh/sshd_config
+
+RUN passwd -d root
+
+RUN echo "${AUTHORIZED_KEYS}" >/root/.ssh/authorized_keys
+

@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  # dynamic builder 
+  dbuilder:
+    image: $DBUILDER_IMAGE
+    container_name: $DBUILDER_CONTAINER

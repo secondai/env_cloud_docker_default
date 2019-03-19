@@ -1,5 +1,5 @@
 
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 
 import bigi from 'bigi'
 import bitcoin from 'bitcoinjs-lib'
@@ -8,12 +8,18 @@ import request from 'request-promise-native'
 import _ from 'lodash'
 import path from 'path'
 
+const fs = require('fs-extra');
+
+const util = require('util');
+
+const execP = util.promisify(exec);
+
 // const stdlib = require('@stdlib/stdlib');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 let defaultPopulate = require('./default-populate');
 
-const {VM} = require('vm2');
+const {NodeVM, VM} = require('vm2');
 let lodash = _;
 require("underscore-query")(lodash);
 
@@ -43,7 +49,7 @@ const secondReady = new Promise(resolve=>{
 class Second {
 	constructor(){
 
-		console.log('Second constructor!');
+		// console.log('Second constructor!');
 
 		this.startup = this.startup.bind(this);
 		this.runRequest = this.runRequest.bind(this);
@@ -59,6 +65,8 @@ class Second {
 
   	secondReadyResolve(); //
 
+	  let startupResponse;
+
   	let vals = await App.sharedServices.db.Node.findAll();
   	if(!vals.length){ //  || process.env.RUN_POPULATE
   		// TODO
@@ -66,14 +74,31 @@ class Second {
   		// - launch "after-fill" node 
   		console.error('Missing nodes, filling...');
   		await defaultPopulate();
-  		console.log('Finished defaultPopulate');
-  	}
-  	// console.log("populate done");
-  	// return false;
 
-    // run "startup" action
-    // - initiates server, heartbeat/cron 
-    let startupResponse = await this.startupRequest();
+  		startupResponse = await this.startupRequest({
+  			type: 'types.second.default.startup_input',
+  			data: {
+  				didPopulate: true,
+  				needsBuild: true
+  			}
+  		});
+
+  		// console.log('Finished defaultPopulate');
+  		// return false;
+  	} else {
+	  	// console.log("populate done");
+	  	// return false;
+
+	    // run "startup" action
+	    // - initiates server, heartbeat/cron 
+	    startupResponse = await this.startupRequest({
+  			type: 'types.second.default.startup_input',
+  			data: {
+  				didPopulate: false,
+  				needsBuild: false
+  			}
+  		});
+	  }
 
     console.log('StartupResponse:', startupResponse);
 
@@ -102,7 +127,7 @@ class Second {
 			}, 30 * 1000);
 
       secondReady.then(async ()=>{
-        console.log('Running incoming request (expecting express_obj, websocket_obj):', InputNode.type); //, this.state.nodesDb);
+        // console.log('Running incoming request (expecting express_obj, websocket_obj):', InputNode.type); //, this.state.nodesDb);
 
         // fetch and run code, pass in 
         // - using a specific "app_base" that is at the root 
@@ -204,7 +229,7 @@ class Second {
 
 	}
 
-	startupRequest(){
+	startupRequest(startupInputNode){
 
 		// Run an "external" request (from outside the universe, goes to "incoming_from_uni" for the default App) 
     return new Promise((resolve, reject)=>{
@@ -218,12 +243,12 @@ class Second {
 			// clear request cache after 30 seconds 
 			// - should just do on completion? 
 			setTimeout(()=>{
-				console.log('freememory-requestscache');
+				// console.log('freememory-requestscache');
 				delete requestsCache[thisRequestId];
 			}, 30 * 1000);
 
       secondReady.then(async ()=>{
-        console.log('Exec service.startup w/o wrapping node:'); //, this.state.nodesDb);
+        // console.log('Exec service.startup w/o wrapping node:'); //, this.state.nodesDb);
 
         // fetch and run code, pass in 
         // - using a specific "app_base" that is at the root 
@@ -231,6 +256,7 @@ class Second {
         // - platform_nodes.data.platform = 'cloud' 
 
         let startupPath = process.env.LAUNCH_STARTUP_PATH || 'services.second.default.startup';
+        // startupPath = 'app.second.sample_install';
 
         console.log('Startup Path:', startupPath);
 
@@ -246,12 +272,12 @@ class Second {
         	return false;
         }
 
-        console.log('Running Startup Node:', CodeNode.name);
+        // console.log('Running Startup Node:', CodeNode.name);
 
 	      // Set context
 	      let safeContext = {
 	        SELF: CodeNode, 
-	        INPUT: {}, // this is NOT validated at this step, cuz we are just passing in a Node (type, data) that I can decide how to handle. Ideally the passed-in schema types includes:  (inputData, outputFormat/info)
+	        INPUT: startupInputNode || {}, // this is NOT validated at this step, cuz we are just passing in a Node (type, data) that I can decide how to handle. Ideally the passed-in schema types includes:  (inputData, outputFormat/info)
 	      }
 	      let threadEventHandlers = {};
 
@@ -445,9 +471,34 @@ const runSafe = ({code, safeContext, requires, threadEventHandlers, requestId, m
     // safeContext._ = lodash;
     safeContext.console = console;
 
+    let useExec;
+
+    // Check node.data.exec for path to file, run that real quick 
+    try {
+    	let codeNode = safeContext.SELF;
+	    if(codeNode.data.exec){
+	    	let binPath = path.join(process.env.ATTACHED_VOLUME_ROOT, codeNode.name, codeNode.data.exec);
+	    	let contents = fs.readFileSync(binPath, 'utf8');
+	    	// console.log('=====contents=======:', contents);
+	    	code = contents;
+	    	useExec = true;
+	    	// code = contents;
+			  // const { stdout, stderr } = await exec('find . -type f | wc -l');
+
+			  // if (stderro) {
+			  //   console.error(`error: ${stderr}`);
+			  // }
+			  // console.log(`Number of files ${stdout}`);
+			  // return false;
+	    }
+	  }catch(err){
+	  	console.error('binError:', err);
+	  }
+
+
     try {
       // console.log('Run ThreadedSafeRun', code);
-      let safeResult = await ThreadedSafeRun(code, safeContext, requires, threadEventHandlers, requestId, mainIpcId, nodePath, timeout);
+      let safeResult = await ThreadedSafeRun(code, safeContext, requires, threadEventHandlers, requestId, mainIpcId, nodePath, timeout, useExec);
       // console.log('Resolved ThreadedSafeRun', safeResult);
       resolve(safeResult);
     }catch(err){
@@ -464,11 +515,11 @@ const runSafe = ({code, safeContext, requires, threadEventHandlers, requestId, m
 }
 
 
-const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHandlers, requestId, mainIpcId, nodePath, timeout) => {
+const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHandlers, requestId, mainIpcId, nodePath, timeout, useExec) => {
   return new Promise(async (resolve, reject)=>{
 
     // console.log('starting ThreadedSafeRun (cannot console.log inside there/here (when run in a sandbox!)!)');
-    let ob = {evalString, context, requires, threadEventHandlers, requestId, mainIpcId, nodePath, timeout}; 
+    let ob = {evalString, context, requires, threadEventHandlers, requestId, mainIpcId, nodePath, timeout, useExec}; 
 
     let combinedOutputData = '';
     let eventEmitter = App.eventEmitter;
@@ -2001,7 +2052,9 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
         },
 
 	      navPathv1: (current, backwards, append)=>{
-	        return current.split('.').slice(0,-1 * backwards).concat(append.split('.')).join('.')
+	      	append = lodash.isString(append) ? append.split('.') : append; 
+	      	append = lodash.isArray(append) ? append:[];
+	        return current.split('.').slice(0,-1 * backwards).concat(append).join('.');
 	      },
 
 			  matchRuleShort: (str, rule)=>{
@@ -2085,7 +2138,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
               console.error('Missing codeNode.data for execCodeNode');
               return reject();
             }
-            if(!opts.codeNode.data.code){
+            if(!opts.codeNode.data.code && !opts.codeNode.data.exec){
               console.error('Missing codeNode.data.code for execCodeNode');
               return reject();
             }
@@ -2219,7 +2272,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 
 					  let refNode = rawNodeWithChildren.find(n=>{return n.name == path});
 					  if(!refNode){
-					  	console.log('No node:', path);
+					  	// console.log('No node:', path);
 					  	return resolve(null);
 					  }
 
@@ -2297,7 +2350,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
         		// * => one level of nodes 
         		// ** => all nodes
 
-        		console.log('Pattern:', pattern);
+        		// console.log('Pattern:', pattern);
 
         		opts = lodash.defaults(opts,{
         			includeChildren: true,
@@ -2360,7 +2413,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 						    attributes,
 						    raw: true
 						  });
-						  console.log('Returning w/o getting children (**)');
+						  // console.log('Returning w/o getting children (**)');
 						  return resolve(rawNodeWithChildren);
 
 
@@ -2472,7 +2525,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 					  	where: whereQuery
       			});
 
-					  console.log('removed!', removeResult);
+					  // console.log('removed!', removeResult);
 
 					  resolve(true);
 
@@ -2698,17 +2751,18 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
         		});
         		// console.log('permissionResult:', permissionResult);
 
-        		if(permissionResult !== true){
-        			// Failed permissions
-        			console.error('Failed permission to run service:', serviceName); //, permissionResult);
-        			return resolve({
-        				type: 'types.second.default.error.service.permissions',
-        				data: {
-        					error: true,
-        					message: "Unable to run service, invalid permissions"
-        				}
-        			});
-        		}
+        		// UNCOMMENT TO ENABLE PERMISSIONS 
+        		// if(permissionResult !== true){
+        		// 	// Failed permissions
+        		// 	console.error('Failed permission to run service:', serviceName); //, permissionResult);
+        		// 	return resolve({
+        		// 		type: 'types.second.default.error.service.permissions',
+        		// 		data: {
+        		// 			error: true,
+        		// 			message: "Unable to run service, invalid permissions"
+        		// 		}
+        		// 	});
+        		// }
 
         		// let permissionForServiceNode = await funcInSandbox.universe.getNodeAtPath('permissions.' + serviceName);
 
@@ -2828,9 +2882,9 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 						}
 
 						for(let actionPathSlice of namesToCheck){
-							console.log('checking permissions for path:', actionPathSlice);
+							// console.log('checking permissions for path:', actionPathSlice);
 							if(breakCheck){
-								console.log('skip');
+								// console.log('skip permission');
 								continue;
 							}
 
@@ -2842,7 +2896,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 
 	        		// Depending on permissions, run stuff 
 	        		if(permissionForActionPathNode){
-	        			console.log('permissionForActionPathNode:', permissionForActionPathNode.name);
+	        			// console.log('permissionForActionPathNode:', permissionForActionPathNode.name);
 		        		switch(permissionForActionPathNode.type){
 
 		        			// case 'std.second.type.simple':
@@ -2855,7 +2909,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 		        				// iterate over data.permissions array 
 		        				let arr = (permissionForActionPathNode.data && permissionForActionPathNode.data.permissions) ? permissionForActionPathNode.data.permissions : [];
 		        				let output = await funcInSandbox.universe.checkPermissionArray(obj, allowStatus, arr);
-		        				console.log('output:', output);
+		        				// console.log('output:', output);
 		        				switch(output){
 		        					case 'allow':
 		        					case 'deny':
@@ -2938,7 +2992,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
     						}
     					}
     					if(!serviceNameMatch){
-    						console.log('serviceName doesnt match patterns');
+    						// console.log('serviceName doesnt match patterns');
     						continue;
     					}
 
@@ -2960,7 +3014,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
     						}
     					}
     					if(!eventNameMatch){
-    						console.log('eventName doesnt match patterns');
+    						// console.log('eventName doesnt match patterns');
     						continue;
     					}
 
@@ -2985,7 +3039,7 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 	    						}
 	    					}
 	    					if(!actionPathMatch){
-	    						console.log('actionPath doesnt match patterns');
+	    						// console.log('actionPath doesnt match patterns');
 	    						continue;
 	    					}
 	    				}
@@ -3182,31 +3236,58 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 
 		global.funcInSandboxLatest = funcInSandbox;
 
+		let requireObj = null;
+		let requirePath = null;
+
+		// exec (path) vs. code (in-node) 
+		if(ob.useExec){
+			// console.log('USING EXTERNAL REQUIREOBJ', ob.context.SELF.data.exec);
+			requireObj = {};
+
+			let rootPath = path.join(process.env.ATTACHED_VOLUME_ROOT, ob.context.SELF.name) + '/';
+			requirePath = path.join(rootPath, ob.context.SELF.data.exec);
+			// console.log('rootPath:', rootPath);
+			// console.log('requirePath:', requirePath);
+			requireObj.root = rootPath;
+			requireObj.external = true;
+			requireObj.builtin = ['*'];
+			// requireObj.context = 'sandbox'; // 'host'
+		}
+
     // using VM, NOT !!!!!!! NodeVM from vm2!!! (external modules NOT allowed!) 
-    let vm = new VM({
+    // let vm = new VM({
+    let vmObj = {
       // console: 'off', //'inherit',
       console: 'inherit', //'inherit',
       sandbox: funcInSandbox, // all the passed-in context variables (node, tenant) 
       nesting: true,
       timeout: ob.timeout || (5 * 1000), //5 * 1000, // default timeout of 5 seconds 
-      require: {
-        // external: true,
-        // [
-        //   '@stdlib/stdlib', // stdlib with lots of math functions
-        //   'lodash', // some basic useful functions 
-        //   'luxon', // datetime with good timezone support built-in 
-        //   'bigi', // big integer stuff for bitcoin
-        //   'bitcoinjs-lib', // big integer stuff for bitcoin
-        // ].concat(ob.requires || []), // also use passed-in libraries!
-        // builtin: [],
-        // root: "./",
-        // mock: {
-        //   fs: {
-        //     readFileSync() { return 'Nice try!'; }
-        //   }
-        // }
-      }
-    });
+      require: requireObj
+      // {
+      //   // external: true,
+      //   // [
+      //   //   '@stdlib/stdlib', // stdlib with lots of math functions
+      //   //   'lodash', // some basic useful functions 
+      //   //   'luxon', // datetime with good timezone support built-in 
+      //   //   'bigi', // big integer stuff for bitcoin
+      //   //   'bitcoinjs-lib', // big integer stuff for bitcoin
+      //   // ].concat(ob.requires || []), // also use passed-in libraries!
+      //   // builtin: [],
+      //   // root: "./",
+      //   // mock: {
+      //   //   fs: {
+      //   //     readFileSync() { return 'Nice try!'; }
+      //   //   }
+      //   // }
+      // }
+    }
+	
+		let vm;
+		if(ob.useExec){
+			vm = new NodeVM(vmObj);
+		} else {
+			vm = new VM(vmObj);
+		}
     
 
     // process.on('uncaughtException', (err) => {
@@ -3218,61 +3299,75 @@ const ThreadedSafeRun = (evalString, context = {}, requires = [], threadEventHan
 
     let output;
     try {
-      output = vm.run(ob.evalString);
+      output = vm.run(ob.evalString, requirePath);
       // process.send('OUTPUT:' + ob.evalString);
       // output could be a promise, so we just wait to resolve it (and resolving a value just returns the value :) )
-      Promise.resolve(output)
-      .then(async (data)=>{
-          // console.log(JSON.stringify(data));
-          // process.stdout.write(JSON.stringify(
-          //     data
-          // ));
+      if(ob.useExec){
+      	try {
+      		let data = await output({
+      			universe: funcInSandbox.universe,
+      			...ob.context,
+      		}); // SELF, INPUT, PATH, 
+      		resolve(data); // respond to parent 
+      	}catch(err){
+      		console.error('Failed running newer vm function:', err);
+      		funcInSandbox.universe.scriptError(err, ob.context.SELF);
+      	}
+      } else {
+      	// inline
+	      Promise.resolve(output)
+	      .then(async (data)=>{
+	          // console.log(JSON.stringify(data));
+	          // process.stdout.write(JSON.stringify(
+	          //     data
+	          // ));
 
-          // console.log('DATA3:', data);
+	          // console.log('DATA3:', data);
 
-          // should be returning a Node!
-          resolve(
-            data
-          ); // sends up from subprocess/child
+	          // should be returning a Node!
+	          resolve(
+	            data
+	          ); // sends up from subprocess/child
 
-          // prevent wipe for awhile 
-          await Promise.resolve(funcInSandbox.universe.wipeFunc)
+	          // prevent wipe for awhile 
+	          await Promise.resolve(funcInSandbox.universe.wipeFunc)
 
-          // if(output && output.keepVM === true){
-          //   // not used, always not kept (was maybe using when ob was nulled for scheduler...)
-          // } else {
-            output = null;
-            setTimeout(()=>{
-              // console.log('freememory-universe');
-              data = null;
-              ob = null;
+	          // if(output && output.keepVM === true){
+	          //   // not used, always not kept (was maybe using when ob was nulled for scheduler...)
+	          // } else {
+	            output = null;
+	            setTimeout(()=>{
+	              // console.log('freememory-universe');
+	              data = null;
+	              ob = null;
 
-              // free memory here? delete the vm entirely? 
-              delete funcInSandbox.universe;
-              funcInSandbox = null;
-              vm = null;
+	              // free memory here? delete the vm entirely? 
+	              delete funcInSandbox.universe;
+	              funcInSandbox = null;
+	              vm = null;
 
-              // console.log('Cleared funcInSandbox');
+	              // console.log('Cleared funcInSandbox');
 
-            },100);
-          // }
+	            },100);
+	          // }
 
 
-          // exit();
-      })
-      .catch(err=>{
-        console.error('---Failed in VM1!!!---- internal_server_error. --', codeNode ? codeNode.name:null, ob.nodePath, err, err.toString ? err.toString():null, output);
-        resolve({
-          type: 'internal_server_error_public_output:0.0.1:local:3298ry2398h3f',
-          data: {
-            error: true,
-            err: 'Error in returned promise',
-            str: err.toString(),
-            nodePath: ob.nodePath,
-            code: ob.evalString
-          }
-        });
-      })
+	          // exit();
+	      })
+	      .catch(err=>{
+	        console.error('---Failed in VM1!!!---- internal_server_error. --', codeNode ? codeNode.name:null, ob.nodePath, err, err.toString ? err.toString():null, output);
+	        resolve({
+	          type: 'internal_server_error_public_output:0.0.1:local:3298ry2398h3f',
+	          data: {
+	            error: true,
+	            err: 'Error in returned promise',
+	            str: err.toString(),
+	            nodePath: ob.nodePath,
+	            code: ob.evalString
+	          }
+	        });
+	      })
+	    }
     }catch(err){
       console.error('---Failed in VM2!!!----', codeNode ? codeNode.name:null, ob.nodePath, err, err.toString ? err.toString():null);
       resolve({

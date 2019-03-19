@@ -8,11 +8,50 @@ services:
     image: nodejs
     container_name: nodejs
     restart: unless-stopped
+    environment:
+      ATTACHED_VOLUME_ROOT: /usr/src/attached-volume/
     networks:
       - app-network
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - node-file-data:/usr/src/attached-volume
+
+  # for rsync'ing and changing a volume 
+  sshd:
+    build:
+      context: .
+      dockerfile: dockerfile.sshd
+      args: 
+        AUTHORIZED_KEYS: ${AUTHORIZED_KEYS}
+    container_name: sshd
+    networks:
+      - app-network
+    ports:
+      - "2222:22"
+    volumes:
+      - node-file-data:/usr/src/attached-volume
+
+  # builder:
+  #   container_name: builder
+  #   build:
+  #     context: .
+  #     dockerfile: nodebuilder.dockerfile
+  #   volumes:
+  #    - node-file-data:/usr/src/attached-volume
+
+  # # dynamic builder 
+  # dbuilder:
+  #   container_name: $DBUILDER_NAME
+  #   build:
+  #     context: $DBUILDER_CONTEXT
+  #     dockerfile: $DBUILDER_DOCKERFILE
+  #     #$DBUILDER_CONTEXT
+  #     #$DBUILDER_DOCKERFILE
+  #     #args: 
+  #     #  DBUILDER_WORKDIR: $DBUILDER_WORKDIR
+  #   volumes:
+  #     - node-file-data:/usr/src/attached-volume
 
   webserver:
     image: nginx:mainline-alpine
@@ -20,6 +59,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - web-root:/var/www/html
       - ./docker-config/nginx-conf:/etc/nginx/conf.d
@@ -77,6 +117,12 @@ services:
 volumes:
   db-data:
     driver: local
+  node-file-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /usr/src/attached-volume
   web-root:
     driver: local
   ipfs-data:
