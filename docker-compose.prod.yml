@@ -16,6 +16,7 @@ services:
       - .:/usr/src/app
       - /usr/src/app/node_modules
       - node-file-data:/usr/src/attached-volume
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # for rsync'ing and changing a volume 
   sshd:
