@@ -23,7 +23,7 @@ COPY --from=library/docker:latest /usr/local/bin/docker /usr/bin/docker
 COPY --from=docker/compose:1.23.2 /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 COPY package*.json ./
-RUN npm install
+RUN yarn
 
 # The instructions for second stage
 FROM node:10-alpine
