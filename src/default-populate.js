@@ -15,7 +15,7 @@ const path = require('path');
 
 async function populate(){
 
-  let VOLUME = process.env.ATTACHED_VOLUME_ROOT + 'root/';
+  let VOLUME = process.env.ATTACHED_VOLUME_ROOT;
 
   let url = process.env.LAUNCH_NODES_ZIP_URL;
   if(!url){
