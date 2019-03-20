@@ -5,30 +5,24 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
 RUN apk update
-RUN apk --no-cache add bash python git rsync unison make g++
+RUN apk add bash git rsync unison python make g++
 
-ENV GLIBC 2.28-r0
+COPY package*.json ./
+RUN npm install
 
-#RUN apk update && apk add --no-cache openssl ca-certificates curl libgcc && \
-#    curl -fsSL -o /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
-#    curl -fsSL -o glibc-$GLIBC.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC/glibc-$GLIBC.apk && \
-#    apk add --no-cache glibc-$GLIBC.apk && \
-#    ln -s /lib/libz.so.1 /usr/glibc-compat/lib/ && \
-#    ln -s /lib/libc.musl-x86_64.so.1 /usr/glibc-compat/lib && \
-#    ln -s /usr/lib/libgcc_s.so.1 /usr/glibc-compat/lib && \
-#    rm /etc/apk/keys/sgerrand.rsa.pub glibc-$GLIBC.apk && \
-#    apk del curl
+
+# The instructions for second stage
+FROM node:10-alpine
+
+RUN apk update
+RUN apk add bash git rsync unison python make g++
 
 COPY --from=library/docker:latest /usr/local/bin/docker /usr/bin/docker
 COPY --from=docker/compose:1.23.2 /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 WORKDIR /usr/src/app
+COPY --from=builder node_modules node_modules
 
 COPY . .
-RUN yarn
-
-
-#COPY --from=builder node_modules node_modules
-
 
 CMD [ "npm", "start" ]
