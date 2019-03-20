@@ -2,7 +2,7 @@
 import { spawn, exec } from 'child_process';
 
 import bigi from 'bigi'
-import bitcoin from 'bitcoinjs-lib'
+// import bitcoin from 'bitcoinjs-lib'
 import request from 'request-promise-native'
 
 import _ from 'lodash'
