@@ -11,5 +11,5 @@ RUN apk update \
 
 RUN passwd -d root
 
-RUN echo "${AUTHORIZED_KEYS}" >/root/.ssh/authorized_keys
+# RUN echo "${AUTHORIZED_KEYS}" >/root/.ssh/authorized_keys
 
