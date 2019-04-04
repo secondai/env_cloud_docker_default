@@ -14,7 +14,7 @@ services:
       - app-network
     volumes:
       - .:/usr/src/app
-      - node-file-data2:/usr/src/attached-volume
+      - node-file-data4:/usr/src/attached-volume
       # - ./../docker_tmp_volume:/usr/src/attached-volume
       # - /usr/src/app/node_modules
       # expose docker so we can run build commands in "builder" container 
@@ -32,7 +32,7 @@ services:
     ports:
       - "2222:22"
     volumes:
-      - node-file-data2:/usr/src/attached-volume
+      - node-file-data4:/usr/src/attached-volume
 
 
   # builder:
@@ -41,7 +41,7 @@ services:
   #     context: .
   #     dockerfile: nodebuilder.dockerfile
   #   volumes:
-  #    - node-file-data2:/usr/src/attached-volume
+  #    - node-file-data4:/usr/src/attached-volume
 
   # # dynamic builder 
   # dbuilder:
@@ -54,7 +54,7 @@ services:
   #     #args: 
   #     #  DBUILDER_WORKDIR: $DBUILDER_WORKDIR
   #   volumes:
-  #     - node-file-data2:/usr/src/attached-volume
+  #     - node-file-data4:/usr/src/attached-volume
 
   webserver:
     container_name: webserver
@@ -133,12 +133,14 @@ services:
 volumes:
   db-data:
     driver: local
-  node-file-data2:
+  # node-file-data42:
+  #   driver: local
+  #   driver_opts:
+  #     type: none
+  #     o: bind
+  #     device: /usr/src/attached-volume
+  node-file-data4:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /usr/src/attached-volume
   web-root:
     driver: local
   ipfs-data:
