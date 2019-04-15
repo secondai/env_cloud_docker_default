@@ -38,5 +38,15 @@ module.exports = function(sequelize, DataTypes) {
     timestamps: true
   });
 
+  Node.associate = ()=>{
+
+    // // where: name = name.split('.').pop()
+    // Node.belongsTo(Node);
+
+    // // where: name = name + '.[-/w]+$'
+    // Node.hasMany(Node);
+
+  }
+
   return Node;
 };
