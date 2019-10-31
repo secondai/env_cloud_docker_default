@@ -74,7 +74,7 @@
     "rimraf": "2.6.3",
     "route-parser": "0.0.5",
     "safe-eval": "0.4.1",
-    "sequelize": "4.42.0",
+    "sequelize": "5.21.2",
     "to-snake-case": "1.0.0",
     "underscore-query": "3.3.2",
     "unzipper": "0.9.11",
