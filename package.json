@@ -48,7 +48,7 @@
     "fs-extra": "7.0.1",
     "get-folder-size": "2.0.1",
     "globby": "9.1.0",
-    "handlebars": "4.1.0",
+    "handlebars": "4.5.3",
     "handlebars-helpers": "^0.10.0",
     "helmet": "3.15.1",
     "immutable": "4.0.0-rc.12",
