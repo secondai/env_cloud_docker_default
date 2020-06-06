@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/second/xyz#readme",
   "dependencies": {
-    "apollo-server-express": "2.4.2",
+    "apollo-server-express": "2.14.2",
     "async-lock": "1.1.4",
     "aws-sdk": "2.404.0",
     "babel-cli": "6.26.0",
